@@ -59,6 +59,68 @@ class Button {
 	}
 }
 
+// Payer class
+class Player {
+
+	constructor()
+	{
+		this.ground = app.canvas.height - 500;
+		this.x = 50;
+		this.y = this.ground;
+		this.srcX = 0; // Refers to the x position on the sprite sheet
+		this.srcY = 0; // Refers to the y position on the sprite sheet
+		this.frameWidth = 128; // Width of image
+		this.frameHeight = 128; // Height of image
+		this.img = new Image();
+		this.img.src = "assets/female.png";
+		this.count = 0; // Used for updating frames
+		this.speed = 3;
+		this.jump = false;
+		this.gravity= 9.81;
+		this.u = 80;
+	}
+
+	SpriteCycle()
+	{
+		this.count += 1;
+
+		if (this.count > 3)
+		{
+			this.count = 0;
+
+			this.srcX += 128;
+
+			if (this.srcX > this.frameWidth * 5)
+			{
+				this.srcX = 0;
+			}
+		}	
+	}
+
+	Update(ground)
+	{
+		this.x += this.speed;
+
+		if (this.jump)
+		{
+			this.y -= this.u;
+			this.jump = false;
+		}
+		else
+		{
+			if (this.y < this.ground)
+			{
+				console.log("In air");
+			}
+		}
+	}
+
+	Draw()
+	{
+		app.ctx.drawImage(this.img, this.srcX, this.srcY, this.frameWidth, this.frameHeight, this.x, this.y, this.frameWidth, this.frameHeight);
+	}
+}
+
 function noscroll() {
 
   window.scrollTo( 0, 0 );
@@ -103,6 +165,9 @@ function main(){
 
 function init(){
 
+	var User;
+	app.User = new Player();
+
 	var BackgroundMusic;
 	app.BackgroundMusic = new Audio("assets/Background Music.mp3");
 	app.BackgroundMusic.loop = true;
@@ -117,6 +182,9 @@ function init(){
 	// Initialise Buttons
 	var MenuButtons;
 	app.MenuButtons = [new Button(x, y, "Play"), new Button(x, y*2, "Options"), new Button(x, y*3, "Exit")];
+
+	var PauseButton;
+	app.PauseButton = new Button(app.canvas.width - 128, 64, "Pause");
 
 	var OptionButtons;
 	app.OptionButtons = [new Button(x - 128, y, "Play"), new Button(x + 128, y, "Play"), new Button(x, y*2, "AudioOn"), new Button(x, y*3,"Back")];
@@ -148,7 +216,17 @@ function update(){
 	// Play Update
 	else if (app.CurrentState === GameState.Play)
 	{
+		app.User.Update(50);
+		app.User.SpriteCycle();
+		app.User.Draw();
+		app.PauseButton.Draw();
 
+		Collision(app.mouse, app.PauseButton);
+	}
+	// Pause Update
+	else if (app.CurrentState === GameState.Pause)
+	{
+		console.log("Game is Paused");
 	}
 
 	// Reset Mouse
@@ -162,10 +240,23 @@ function update(){
 // Function to handle collision detection between 2 objects
 function Collision(Object_01, Object_02)
 {
+	var collid = false;
+
 	if (Object_01.x > Object_02.x && Object_01.x < (Object_02.x + Object_02.width) &&
 		Object_01.y > Object_02.y && Object_01.y < (Object_02.y + Object_02.height))
 	{
-		if (Object_02.name === "Options")
+		collid = true;
+	}
+
+	if (collid === true)
+	{
+		HandleCollision(Object_02);
+	}
+}
+
+function HandleCollision(Object_02)
+{
+	if (Object_02.name === "Options")
 		{
 			app.CurrentState = GameState.Options;
 			app.ButtonClickSound.play();
@@ -197,12 +288,16 @@ function Collision(Object_01, Object_02)
 				app.BackgroundMusic.volume = 0;
 			}
 		}
+		else if (Object_02.name === "Pause")
+		{
+			app.ButtonClickSound.play();
+			app.CurrentState = GameState.Pause;
+		}
 		else if (Object_02.name === "Exit")
 		{
 			app.ButtonClickSound.play();
 			window.location.href = "http://keoghsph.pythonanywhere.com/projects";
 		}
-	}
 }
 
 // Function to handle touch input
@@ -210,4 +305,10 @@ function onTouchStart(e){
 	touches = e.touches;
 	app.mouse.x = touches[0].clientX;
 	app.mouse.y = touches[0].clientY;
+
+	if (app.CurrentState === GameState.Play && !app.User.jump)
+	{
+		app.User.jump = true;
+		console.log("Jump");
+	}
 }
