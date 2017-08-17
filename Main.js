@@ -19,7 +19,6 @@ class Button {
 		this.name = ImageLoad;
 		this.img = new Image();
 		var LoadPath = 'assets/' + ImageLoad + '.png';
-		console.log(LoadPath);
 		if (ImageLoad === 'Null')
 		{
 
@@ -32,11 +31,31 @@ class Button {
 		this.height = 128;
 		this.x = x - (this.width / 2);
 		this.y = y - (this.height / 2);
+
+		if (this.name === "AudioOn")
+		{
+			this.audio = true;
+		}
+
 	}
 
 	Draw()
 	{
 		app.ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
+	}
+
+	ChangeImage()
+	{
+		if (this.audio === true)
+		{
+			this.img.src = "assets/AudioOff.png";
+			this.audio = false;
+		}
+		else
+		{
+			this.img.src = "assets/AudioOn.png";
+			this.audio = true;
+		}
 	}
 }
 
@@ -84,12 +103,23 @@ function main(){
 
 function init(){
 
+	var BackgroundMusic;
+	app.BackgroundMusic = new Audio("assets/Background Music.mp3");
+	app.BackgroundMusic.loop = true;
+	app.BackgroundMusic.play();
+
+	var ButtonClickSound;
+	app.ButtonClickSound = new Audio("assets/Button.wav");
+
 	var x = app.canvas.width / 2;
 	var y = app.canvas.height / 4;
 
 	// Initialise Buttons
 	var MenuButtons;
 	app.MenuButtons = [new Button(x, y, "Play"), new Button(x, y*2, "Options"), new Button(x, y*3, "Exit")];
+
+	var OptionButtons;
+	app.OptionButtons = [new Button(x - 128, y, "Play"), new Button(x + 128, y, "Play"), new Button(x, y*2, "AudioOn"), new Button(x, y*3,"Back")];
 }
 
 // Main Update function
@@ -109,7 +139,11 @@ function update(){
 	// Options menu update
 	else if (app.CurrentState === GameState.Options)
 	{
-		console.log("Options");
+		for (var i = 0; i < app.OptionButtons.length; i++)
+		{
+			app.OptionButtons[i].Draw();
+			Collision(app.mouse, app.OptionButtons[i]);
+		}
 	}
 	// Play Update
 	else if (app.CurrentState === GameState.Play)
@@ -134,13 +168,38 @@ function Collision(Object_01, Object_02)
 		if (Object_02.name === "Options")
 		{
 			app.CurrentState = GameState.Options;
+			app.ButtonClickSound.play();
 		}
 		else if (Object_02.name === "Play")
 		{
 			app.CurrentState = GameState.Play;
+			app.ButtonClickSound.play();
+		}
+		else if (Object_02.name === "Back")
+		{
+			app.ButtonClickSound.play();
+			app.CurrentState = GameState.MainMenu;
+		}
+		else if (Object_02.name === "AudioOn")
+		{
+			app.ButtonClickSound.play();
+			Object_02.ChangeImage();
+
+			// Mutes or unmutes audio
+			if (Object_02.audio === true)
+			{
+				app.ButtonClickSound.volume = 1;
+				app.BackgroundMusic.volume = 1;
+			}
+			else
+			{
+				app.ButtonClickSound.volume = 0;
+				app.BackgroundMusic.volume = 0;
+			}
 		}
 		else if (Object_02.name === "Exit")
 		{
+			app.ButtonClickSound.play();
 			window.location.href = "http://keoghsph.pythonanywhere.com/projects";
 		}
 	}
