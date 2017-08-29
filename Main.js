@@ -12,6 +12,19 @@ var GameState = {
 	Lose : 6
 }
 
+// For Delta time tracking
+var LastUpdate = Date.now();
+var Now;
+var DeltaTime;
+
+// Set offset from screen
+var OffsetX = 0;
+
+
+
+
+
+// Button class
 class Button {
 
 	constructor(x, y, ImageLoad)
@@ -31,12 +44,18 @@ class Button {
 		this.height = 128;
 		this.x = x - (this.width / 2);
 		this.y = y - (this.height / 2);
+		this.accel = 0;
+		this.vel = 0;
 
 		if (this.name === "AudioOn")
 		{
 			this.audio = true;
 		}
+	}
 
+	PauseInit(Acceleration)
+	{
+		this.accel = Acceleration;
 	}
 
 	Draw()
@@ -57,7 +76,18 @@ class Button {
 			this.audio = true;
 		}
 	}
+
+	Update()
+	{
+		this.vel = this.vel + (this.accel * DeltaTime);
+		this.x += this.vel;
+	}
 }
+
+
+
+
+
 
 // Payer class
 class Player {
@@ -74,10 +104,11 @@ class Player {
 		this.img = new Image();
 		this.img.src = "assets/female.png";
 		this.count = 0; // Used for updating frames
-		this.speed = 3;
 		this.jump = false;
-		this.gravity= 9.81;
-		this.u = 80;
+		this.acceleration = {x : 0.1, y : 9.81};
+		this.velocity = { x : 0, y : 0};
+		this.u = 60;
+		this.InAir = false;
 	}
 
 	SpriteCycle()
@@ -97,20 +128,36 @@ class Player {
 		}	
 	}
 
-	Update(ground)
+	Update()
 	{
-		this.x += this.speed;
+		// Calculate velocity over the horizontal axis
+		this.velocity.x = this.velocity.x + (this.acceleration.x * DeltaTime);
+
+		this.x += this.velocity.x;
+
+		OffsetX += this.velocity.x;
+
+		app.ctx.translate(-this.velocity.x, 0);
 
 		if (this.jump)
 		{
-			this.y -= this.u;
+			this.velocity.y = -this.u;
 			this.jump = false;
+			this.InAir = true;
 		}
 		else
 		{
-			if (this.y < this.ground)
+			if (this.InAir)
 			{
-				console.log("In air");
+				// Calculate vertical physics
+				this.velocity.y = this.velocity.y + (this.acceleration.y * DeltaTime);
+				this.y += (this.velocity.y * DeltaTime) + (0.5 * this.acceleration.y * (DeltaTime * DeltaTime));
+
+				if (this.y >= this.ground)
+				{
+					this.InAir = false;
+					this.y = this.ground;
+				}
 			}
 		}
 	}
@@ -120,6 +167,89 @@ class Player {
 		app.ctx.drawImage(this.img, this.srcX, this.srcY, this.frameWidth, this.frameHeight, this.x, this.y, this.frameWidth, this.frameHeight);
 	}
 }
+
+
+
+
+
+
+// Class to keep track of score and lives
+// Calculates when to generate obstacles
+class GameController {
+	constructor()
+	{
+		app.ctx.fillStyle = 'white';
+		app.ctx.font = '30px serif';
+		this.Level = 1;
+		this.Score = 0;
+		this.ScoreText = "Score : " + this.Score;
+		this.x = 0;
+		this.y = 30;
+		this.Multiplier = 1;
+		this.GenerateObstacle = false;
+		this.clock = 0;
+	}
+
+	Draw()
+	{
+		app.ctx.fillText(this.ScoreText, this.x, this.y);
+	}
+
+	Update(velocity)
+	{
+		// Scroll HUD
+		this.x += velocity;
+
+		// Calcu;ate Score
+		this.Score += this.Multiplier * (velocity / 120);
+
+		this.Score = Math.round(this.Score * 100) / 100;
+
+		this.ScoreText = "Score : " + this.Score;
+
+		// Calculate generation
+		this.clock += DeltaTime * velocity;
+
+		if (this.clock > 50)
+		{
+			this.GenerateObstacle = true;
+			this.clock = 0;
+		}
+
+	}
+}
+
+
+
+
+
+
+class Obstacle {
+	constructor(x, Level)
+	{
+		this.ground = app.canvas.height - 500;
+		this.x = x;
+		this.y = this.ground + 64;
+		this.width = 64;
+		this.height = 64;
+
+		this.img = new Image();
+
+		if (Level < 3)
+		{
+			this.img.src = "assets/Bush.png";
+		}
+	}
+
+	Draw()
+	{
+		app.ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
+	}
+}
+
+
+
+
 
 function noscroll() {
 
@@ -163,16 +293,24 @@ function main(){
 	update();
 }
 
+
+
+
+
+
 function init(){
 
+	// Create user
 	var User;
 	app.User = new Player();
 
+	// Background Music
 	var BackgroundMusic;
 	app.BackgroundMusic = new Audio("assets/Background Music.mp3");
 	app.BackgroundMusic.loop = true;
-	app.BackgroundMusic.play();
+	//app.BackgroundMusic.play();
 
+	// Create button click sound
 	var ButtonClickSound;
 	app.ButtonClickSound = new Audio("assets/Button.wav");
 
@@ -185,15 +323,61 @@ function init(){
 
 	var PauseButton;
 	app.PauseButton = new Button(app.canvas.width - 128, 64, "Pause");
+	app.PauseButton.PauseInit(app.User.acceleration.x);
 
 	var OptionButtons;
 	app.OptionButtons = [new Button(x - 128, y, "Play"), new Button(x + 128, y, "Play"), new Button(x, y*2, "AudioOn"), new Button(x, y*3,"Back")];
+
+	// Create background image
+	var BackgroundImage;
+	app.BackgroundImage = new Image();
+
+	app.BackgroundImage.onload = function()
+	{
+		var heightDiff = screen.height + app.BackgroundImage.height;
+		app.BackgroundImage.height = heightDiff;
+		app.BackgroundImage.width = (app.BackgroundImage.width * screen.width);
+	}
+
+	app.BackgroundImage.src = "assets/Background.png";
+
+	// Create GameController Object
+	var Controller;
+	app.Controller = new GameController();
+
+	////////////////////////////////////////////////
+	//testing
+	////////////////////////////////////////////////
+	var Obstacles;
+	app.Obstacles = [];
 }
+
+
+
+
+
+
+
+// Create a new obstacle
+function GenerateObstacle()
+{
+	app.Obstacles.push(new Obstacle(5, 1));
+}
+
+
+
+
 
 // Main Update function
 function update(){
+	// Calculate Delta Time
+	Now = Date.now();
+	DeltaTime = Now - LastUpdate;
+	DeltaTime = DeltaTime / 60;
+	LastUpdate = Now;
+
 	// Clear canvas for drawing purposes
-	app.ctx.clearRect(0, 0, app.canvas.width, app.canvas.height);
+	app.ctx.clearRect(0, 0, app.BackgroundImage.width, app.canvas.height);
 
 	// Main Menu Update
 	if (app.CurrentState === GameState.MainMenu)
@@ -216,10 +400,29 @@ function update(){
 	// Play Update
 	else if (app.CurrentState === GameState.Play)
 	{
-		app.User.Update(50);
+		// Draw Background
+		app.ctx.drawImage(app.BackgroundImage, 0, 0, app.BackgroundImage.width + 1000, app.BackgroundImage.height);
+
+		// Update the player
+		app.User.Update();
 		app.User.SpriteCycle();
 		app.User.Draw();
+
+		// Update GameController
+		app.Controller.Update(app.User.velocity.x);
+		app.Controller.Draw();
+
+		if (app.Controller.GenerateObstacle)
+		{
+			app.Controller.GenerateObstacle = false;
+			GenerateObstacle();
+		}
+
+		// Pause button function calls
+		app.PauseButton.Update();
 		app.PauseButton.Draw();
+
+		
 
 		Collision(app.mouse, app.PauseButton);
 	}
@@ -237,22 +440,45 @@ function update(){
 	window.requestAnimationFrame(update);
 }
 
+
+
+
+
+
 // Function to handle collision detection between 2 objects
 function Collision(Object_01, Object_02)
 {
-	var collid = false;
+	var collide = false;
 
-	if (Object_01.x > Object_02.x && Object_01.x < (Object_02.x + Object_02.width) &&
-		Object_01.y > Object_02.y && Object_01.y < (Object_02.y + Object_02.height))
+	//testing purposes
+	if (Object_02.name === "Pause")
 	{
-		collid = true;
+		var PlaceHolderX = Object_02.x - OffsetX;
+		if (Object_01.x > PlaceHolderX && Object_01.x < (PlaceHolderX + Object_02.width) &&
+			Object_01.y > Object_02.y && Object_01.y < (Object_02.y + Object_02.height))
+		{
+			collide = true;
+		}
+	}
+	else
+	{
+		if (Object_01.x > Object_02.x && Object_01.x < (Object_02.x + Object_02.width) &&
+			Object_01.y > Object_02.y && Object_01.y < (Object_02.y + Object_02.height))
+		{
+			collide = true;
+		}
 	}
 
-	if (collid === true)
+	if (collide === true)
 	{
 		HandleCollision(Object_02);
 	}
 }
+
+
+
+
+
 
 function HandleCollision(Object_02)
 {
@@ -306,7 +532,7 @@ function onTouchStart(e){
 	app.mouse.x = touches[0].clientX;
 	app.mouse.y = touches[0].clientY;
 
-	if (app.CurrentState === GameState.Play && !app.User.jump)
+	if (app.CurrentState === GameState.Play && !app.User.jump && !app.User.InAir)
 	{
 		app.User.jump = true;
 		console.log("Jump");
