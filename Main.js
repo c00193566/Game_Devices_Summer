@@ -80,6 +80,16 @@ class Button {
 	Update()
 	{
 		this.vel = this.vel + (this.accel * DeltaTime);
+
+		if (app.Controller.Level < 2)
+		{
+			if (this.vel > 12)
+			{
+				this.vel = 12;
+			}
+		}
+
+
 		this.x += this.vel;
 	}
 }
@@ -132,6 +142,17 @@ class Player {
 	{
 		// Calculate velocity over the horizontal axis
 		this.velocity.x = this.velocity.x + (this.acceleration.x * DeltaTime);
+
+		console.log(this.velocity.x);
+
+		if (app.Controller.Level < 2)
+		{
+			if (this.velocity.x > 12)
+			{
+				this.velocity.x = 12;
+			}
+		}
+
 
 		this.x += this.velocity.x;
 
@@ -210,7 +231,7 @@ class GameController {
 		// Calculate generation
 		this.clock += DeltaTime * velocity;
 
-		if (this.clock > 50)
+		if (this.clock > 200)
 		{
 			this.GenerateObstacle = true;
 			this.clock = 0;
@@ -224,9 +245,11 @@ class GameController {
 
 
 
+// Obstacle class
 class Obstacle {
 	constructor(x, Level)
 	{
+		this.name = "Obstacle";
 		this.ground = app.canvas.height - 500;
 		this.x = x;
 		this.y = this.ground + 64;
@@ -247,6 +270,18 @@ class Obstacle {
 	}
 }
 
+
+
+
+
+
+// Pick up class
+class PickUp {
+	constructor()
+	{
+
+	}
+}
 
 
 
@@ -299,6 +334,9 @@ function main(){
 
 
 function init(){
+	// Create GameController Object
+	var Controller;
+	app.Controller = new GameController();
 
 	// Create user
 	var User;
@@ -341,13 +379,7 @@ function init(){
 
 	app.BackgroundImage.src = "assets/Background.png";
 
-	// Create GameController Object
-	var Controller;
-	app.Controller = new GameController();
-
-	////////////////////////////////////////////////
-	//testing
-	////////////////////////////////////////////////
+	// Create array to hold obstacles
 	var Obstacles;
 	app.Obstacles = [];
 }
@@ -361,7 +393,9 @@ function init(){
 // Create a new obstacle
 function GenerateObstacle()
 {
-	app.Obstacles.push(new Obstacle(5, 1));
+	var x = app.User.x + app.canvas.width;
+
+	app.Obstacles.push(new Obstacle(x, 1));
 }
 
 
@@ -416,6 +450,21 @@ function update(){
 		{
 			app.Controller.GenerateObstacle = false;
 			GenerateObstacle();
+		}
+
+		if (app.Obstacles.length > 0)
+		{
+			for (var i = 0; i < app.Obstacles.length; i++)
+			{
+				app.Obstacles[i].Draw();
+
+				if (app.Obstacles[i].x < app.User.x - 100)
+				{
+					app.Obstacles.splice(i, 1);
+					break;
+				}
+
+			}
 		}
 
 		// Pause button function calls
