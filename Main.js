@@ -19,6 +19,10 @@ var DeltaTime;
 
 // Set offset from screen
 var OffsetX = 0;
+var Mute = true;
+
+// Keep track of last gamestate
+var LastGamestate;
 
 
 
@@ -27,19 +31,11 @@ var OffsetX = 0;
 // Button class
 class Button {
 
-	constructor(x, y, ImageLoad)
+	constructor(x, y, ImageLoad, mute)
 	{
 		this.name = ImageLoad;
 		this.img = new Image();
 		var LoadPath = 'assets/' + ImageLoad + '.png';
-		if (ImageLoad === 'Null')
-		{
-
-		}
-		else
-		{
-			this.img.src = LoadPath;
-		}
 		this.width = 128;
 		this.height = 128;
 		this.x = x - (this.width / 2);
@@ -49,7 +45,34 @@ class Button {
 
 		if (this.name === "AudioOn")
 		{
-			this.audio = true;
+			this.audio = mute;
+		}
+
+		if (ImageLoad === 'Null')
+		{
+
+		}
+		else
+		{
+			if (this.name != "AudioOn")
+			{
+				this.img.src = LoadPath;
+			}
+			else
+			{
+				if (!this.audio)
+				{
+					this.img.src = "assets/AudioOff.png";
+					app.ButtonClickSound.volume = 0;
+					app.BackgroundMusic.volume = 0;
+				}
+				else
+				{
+					this.img.src = LoadPath;
+					app.ButtonClickSound.volume = 1;
+					app.BackgroundMusic.volume = 1;
+				}
+			}
 		}
 	}
 
@@ -77,20 +100,9 @@ class Button {
 		}
 	}
 
-	Update()
+	Update(velocity)
 	{
-		this.vel = this.vel + (this.accel * DeltaTime);
-
-		if (app.Controller.Level < 2)
-		{
-			if (this.vel > 12)
-			{
-				this.vel = 12;
-			}
-		}
-
-
-		this.x += this.vel;
+		this.x += velocity;
 	}
 }
 
@@ -167,8 +179,6 @@ class Player {
 		{
 			this.clock += DeltaTime;
 
-			console.log(this.clock);
-
 			if (this.clock > 25)
 			{
 				this.invincible = false;
@@ -235,6 +245,7 @@ class GameController {
 		app.ctx.font = '30px serif';
 		this.Level = 1;
 		this.Score = 0;
+		this.EndPosition = 50000;
 		this.ScoreText = "Score : " + this.Score;
 		this.Lives = 3;
 		this.LivesText = "Lives : " + this.Lives;
@@ -266,13 +277,18 @@ class GameController {
 		this.LivesText = "Lives : " + this.Lives;
 
 		// Calculate generation
-		this.clock += DeltaTime * velocity;
-
-		if (this.clock > 200)
+		if (this.x < this.EndPosition)
 		{
-			this.GenerateObstacle = true;
-			this.clock = 0;
+			this.clock += DeltaTime * velocity;
+
+			if (this.clock > 200)
+			{
+				this.GenerateObstacle = true;
+				this.clock = 0;
+			}
 		}
+
+		console.log(this.x);
 
 	}
 }
@@ -314,12 +330,19 @@ class Obstacle {
 
 // Pick up class
 class PickUp {
-	constructor()
+	constructor(x)
 	{
 
 	}
 }
 
+class FinsihLine
+{
+	constructor(x, y)
+	{
+
+	}
+}
 
 
 
@@ -392,16 +415,40 @@ function init(){
 	var x = app.canvas.width / 2;
 	var y = app.canvas.height / 4;
 
+	var MainMenuImage;
+	app.MainMenuImage = new Image();
+
+	app.MainMenuImage.onload = function()
+	{
+		app.MainMenuImage.width = app.canvas.width;
+		app.MainMenuImage.height = app.canvas.height;
+	}
+
+	app.MainMenuImage.src = "assets/MainMenu.png";
+
+	var PauseMenuImage;
+	app.PauseMenuImage = new Image();
+
+	app.PauseMenuImage.onload = function()
+	{
+		app.PauseMenuImage.width = app.canvas.width;
+		app.PauseMenuImage.height = app.canvas.height;
+	}
+
+	app.PauseMenuImage.src = "assets/PauseImage.png";
+
 	// Initialise Buttons
 	var MenuButtons;
 	app.MenuButtons = [new Button(x, y, "Play"), new Button(x, y*2, "Options"), new Button(x, y*3, "Exit")];
 
 	var PauseButton;
 	app.PauseButton = new Button(app.canvas.width - 128, 64, "Pause");
-	app.PauseButton.PauseInit(app.User.acceleration.x);
+
+	var PauseMenu;
+	app.PauseMenu = [new Button(x, y, "Play"), new Button(x, y*2, "Options"), new Button(x, y*3, "Exit")]
 
 	var OptionButtons;
-	app.OptionButtons = [new Button(x - 128, y, "Play"), new Button(x + 128, y, "Play"), new Button(x, y*2, "AudioOn"), new Button(x, y*3,"Back")];
+	app.OptionButtons = [new Button(x - 128, y, "Play"), new Button(x + 128, y, "Play"), new Button(x, y*2, "AudioOn", Mute), new Button(x, y*3,"Back")];
 
 	// Create background image
 	var BackgroundImage;
@@ -458,6 +505,8 @@ function update(){
 	// Main Menu Update
 	if (app.CurrentState === GameState.MainMenu)
 	{
+		app.ctx.drawImage(app.MainMenuImage, 0, 0, app.MainMenuImage.width, app.MainMenuImage.height);
+
 		for (var i = 0; i < app.MenuButtons.length; i++)
 		{
 			app.MenuButtons[i].Draw();
@@ -467,6 +516,15 @@ function update(){
 	// Options menu update
 	else if (app.CurrentState === GameState.Options)
 	{
+		if (LastGamestate === GameState.MainMenu)
+		{
+			app.ctx.drawImage(app.MainMenuImage, 0, 0, app.MainMenuImage.width, app.MainMenuImage.height);
+		}
+		else
+		{
+			app.ctx.drawImage(app.PauseMenuImage, 0, 0, app.PauseMenuImage.width, app.PauseMenuImage.height);
+		}
+
 		for (var i = 0; i < app.OptionButtons.length; i++)
 		{
 			app.OptionButtons[i].Draw();
@@ -506,7 +564,7 @@ function update(){
 		}
 
 		// Pause button function calls
-		app.PauseButton.Update();
+		app.PauseButton.Update(app.User.velocity.x);
 		app.PauseButton.Draw();
 
 		if (app.Controller.Lives < 0)
@@ -519,7 +577,14 @@ function update(){
 	// Pause Update
 	else if (app.CurrentState === GameState.Pause)
 	{
-		console.log(app.ctx.outerWidth);
+		app.ctx.drawImage(app.PauseMenuImage, 0, 0, app.PauseMenuImage.width, app.PauseMenuImage.height);
+		app.ctx.moveTo(0, 0);
+
+		for (var i = 0; i < app.PauseMenu.length; i++)
+		{
+			app.PauseMenu[i].Draw();
+			Collision(app.mouse, app.PauseMenu[i]);
+		}
 	}
 	else if (app.CurrentState === GameState.Lose)
 	{
@@ -539,11 +604,27 @@ function update(){
 
 
 
-
+// Resets all objects
 function Reset()
 {
 	// Clear Obstacle array
 	delete app.Obstacles;
+	delete app.BackgroundImage;
+	delete app.Controller;
+	delete app.User;
+	delete app.GroundImage;
+	app.BackgroundMusic.pause();
+	Mute = app.OptionButtons[2].audio;
+	delete app.BackgroundMusic;
+	delete app.ButtonClickSound;
+	delete app.MenuButtons;
+	delete app.PauseButton;
+	delete app.OptionButtons;
+	delete app.MainMenuImage;
+
+	OffsetX = 0;
+
+	init();
 
 	app.CurrentState = GameState.MainMenu;
 }
@@ -589,7 +670,6 @@ function Collision(Object_01, Object_02)
 			Object_01.y > Object_02.y && Object_01.y < (Object_02.y + Object_02.height))
 		{
 			collide = true;
-			console.log(collide);
 		}
 	}
 
@@ -608,6 +688,7 @@ function HandleCollision(Object_02)
 {
 	if (Object_02.name === "Options")
 		{
+			LastGamestate = app.CurrentState;
 			app.CurrentState = GameState.Options;
 			app.ButtonClickSound.play();
 		}
@@ -617,18 +698,38 @@ function HandleCollision(Object_02)
 			{
 				app.User.invincible = true;
 				app.Controller.Lives -= 1;
-				console.log("Hit");
+				app.Controller.Score -= 50;
+				app.User.velocity.x -= 5;
+
+				if (app.Controller.Score <= 0)
+				{
+					app.Controller.Score = 0;
+				}
+
+				if (app.User.velocity.x <= 2)
+				{
+					app.User.velocity.x = 2;
+				}
 			}
 		}
 		else if (Object_02.name === "Play")
 		{
-			app.CurrentState = GameState.Play;
-			app.ButtonClickSound.play();
+			if (app.CurrentState === GameState.MainMenu)
+			{
+				app.CurrentState = GameState.Play;
+				app.ButtonClickSound.play();
+			}
+			else if (app.CurrentState === GameState.Pause)
+			{
+				app.ctx.translate(-OffsetX, 0);
+				app.CurrentState = GameState.Play;
+				app.ButtonClickSound.play();
+			}
 		}
 		else if (Object_02.name === "Back")
 		{
 			app.ButtonClickSound.play();
-			app.CurrentState = GameState.MainMenu;
+			app.CurrentState = LastGamestate;
 		}
 		else if (Object_02.name === "AudioOn")
 		{
@@ -656,7 +757,14 @@ function HandleCollision(Object_02)
 		else if (Object_02.name === "Exit")
 		{
 			app.ButtonClickSound.play();
-			window.location.href = "http://keoghsph.pythonanywhere.com/projects";
+			if (app.CurrentState === GameState.MainMenu)
+			{
+				window.location.href = "http://keoghsph.pythonanywhere.com/projects";
+			}
+			else if (app.CurrentState === GameState.Pause)
+			{
+				Reset();
+			}
 		}
 }
 
