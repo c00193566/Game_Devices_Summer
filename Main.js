@@ -162,6 +162,14 @@ class Player {
 
 		app.ctx.translate(-this.velocity.x, 0);
 
+		// Invisibility
+		this.clock += DeltaTime;
+		if (this.clock > 5)
+		{
+			this.invincible = false;
+		}
+
+		// Jump physics
 		if (this.jump)
 		{
 			this.velocity.y = -this.u;
