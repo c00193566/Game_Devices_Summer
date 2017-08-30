@@ -332,15 +332,20 @@ class Obstacle {
 class PickUp {
 	constructor(x)
 	{
-
+		
 	}
 }
 
 class FinsihLine
 {
-	constructor(x, y)
+	constructor(x)
 	{
-
+		this.name = "FinsihLine";
+		this.ground = app.canvas.height - 500;
+		this.x = x;
+		this.y = this.ground + 64;
+		this.width = 64;
+		this.height = 64;
 	}
 }
 
