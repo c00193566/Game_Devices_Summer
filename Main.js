@@ -104,13 +104,17 @@ class Player {
 
 	constructor()
 	{
+		this.name = "Player";
 		this.ground = app.canvas.height - 500;
+		this.invincible = false;
+		this.visible = true;
+		this.clock = 0.0;
 		this.x = 50;
 		this.y = this.ground;
 		this.srcX = 0; // Refers to the x position on the sprite sheet
 		this.srcY = 0; // Refers to the y position on the sprite sheet
-		this.frameWidth = 128; // Width of image
-		this.frameHeight = 128; // Height of image
+		this.width = 128; // Width of image
+		this.height = 128; // Height of image
 		this.img = new Image();
 		this.img.src = "assets/female.png";
 		this.count = 0; // Used for updating frames
@@ -131,7 +135,7 @@ class Player {
 
 			this.srcX += 128;
 
-			if (this.srcX > this.frameWidth * 5)
+			if (this.srcX > this.width * 5)
 			{
 				this.srcX = 0;
 			}
@@ -142,8 +146,6 @@ class Player {
 	{
 		// Calculate velocity over the horizontal axis
 		this.velocity.x = this.velocity.x + (this.acceleration.x * DeltaTime);
-
-		console.log(this.velocity.x);
 
 		if (app.Controller.Level < 2)
 		{
@@ -185,7 +187,22 @@ class Player {
 
 	Draw()
 	{
-		app.ctx.drawImage(this.img, this.srcX, this.srcY, this.frameWidth, this.frameHeight, this.x, this.y, this.frameWidth, this.frameHeight);
+		if (this.invincible)
+		{
+			if(this.visible)
+			{
+				app.ctx.drawImage(this.img, this.srcX, this.srcY, this.width, this.height, this.x, this.y, this.width, this.height);
+				this.visible = false;
+			}
+			else
+			{
+				this.visible = true;
+			}
+		}
+		else
+		{
+			app.ctx.drawImage(this.img, this.srcX, this.srcY, this.width, this.height, this.x, this.y, this.width, this.height);
+		}	
 	}
 }
 
@@ -204,6 +221,8 @@ class GameController {
 		this.Level = 1;
 		this.Score = 0;
 		this.ScoreText = "Score : " + this.Score;
+		this.Lives = 3;
+		this.LivesText = "Lives : " + this.Lives;
 		this.x = 0;
 		this.y = 30;
 		this.Multiplier = 1;
@@ -214,6 +233,7 @@ class GameController {
 	Draw()
 	{
 		app.ctx.fillText(this.ScoreText, this.x, this.y);
+		app.ctx.fillText(this.LivesText, this.x + 200, this.y);
 	}
 
 	Update(velocity)
@@ -227,6 +247,8 @@ class GameController {
 		this.Score = Math.round(this.Score * 100) / 100;
 
 		this.ScoreText = "Score : " + this.Score;
+
+		this.LivesText = "Lives : " + this.Lives;
 
 		// Calculate generation
 		this.clock += DeltaTime * velocity;
@@ -369,15 +391,21 @@ function init(){
 	// Create background image
 	var BackgroundImage;
 	app.BackgroundImage = new Image();
+	var GroundImage;
+	app.GroundImage = new Image();
 
 	app.BackgroundImage.onload = function()
 	{
 		var heightDiff = screen.height + app.BackgroundImage.height;
 		app.BackgroundImage.height = heightDiff;
 		app.BackgroundImage.width = (app.BackgroundImage.width * screen.width);
+		app.GroundImage.width = (app.GroundImage.width * screen.width);
+		heightDiff = screen.height + app.GroundImage.height;
+		app.GroundImage.height = heightDiff;
 	}
 
 	app.BackgroundImage.src = "assets/Background.png";
+	app.GroundImage.src = "assets/Ground.png";
 
 	// Create array to hold obstacles
 	var Obstacles;
@@ -436,6 +464,7 @@ function update(){
 	{
 		// Draw Background
 		app.ctx.drawImage(app.BackgroundImage, 0, 0, app.BackgroundImage.width + 1000, app.BackgroundImage.height);
+		app.ctx.drawImage(app.GroundImage, 0, (app.User.ground + 128), app.GroundImage.width, app.GroundImage.height);
 
 		// Update the player
 		app.User.Update();
@@ -458,12 +487,7 @@ function update(){
 			{
 				app.Obstacles[i].Draw();
 
-				if (app.Obstacles[i].x < app.User.x - 100)
-				{
-					app.Obstacles.splice(i, 1);
-					break;
-				}
-
+				PlayerCollision(app.User, app.Obstacles[i]);
 			}
 		}
 
@@ -493,6 +517,22 @@ function update(){
 
 
 
+// Function for player collision
+function PlayerCollision(Object_01, Object_02)
+{
+	var collide = false;
+
+	if (Object_01.x > Object_02.x && Object_01.x < (Object_02.x + Object_02.width) &&
+		(Object_01.y + Object_01.height) > Object_02.y)
+	{
+		collide = true	
+	}
+
+	if (collide)
+	{
+		HandleCollision(Object_02);
+	}
+}
 
 // Function to handle collision detection between 2 objects
 function Collision(Object_01, Object_02)
@@ -515,6 +555,7 @@ function Collision(Object_01, Object_02)
 			Object_01.y > Object_02.y && Object_01.y < (Object_02.y + Object_02.height))
 		{
 			collide = true;
+			console.log(collide);
 		}
 	}
 
@@ -535,6 +576,15 @@ function HandleCollision(Object_02)
 		{
 			app.CurrentState = GameState.Options;
 			app.ButtonClickSound.play();
+		}
+		else if (Object_02.name === "Obstacle")
+		{
+			if (!app.User.invincible)
+			{
+				app.User.invincible = true;
+				app.Controller.Lives -= 1;
+				console.log("Hit");
+			}
 		}
 		else if (Object_02.name === "Play")
 		{
