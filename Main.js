@@ -163,10 +163,17 @@ class Player {
 		app.ctx.translate(-this.velocity.x, 0);
 
 		// Invisibility
-		this.clock += DeltaTime;
-		if (this.clock > 5)
+		if (this.invincible)
 		{
-			this.invincible = false;
+			this.clock += DeltaTime;
+
+			console.log(this.clock);
+
+			if (this.clock > 25)
+			{
+				this.invincible = false;
+				this.clock = 0;
+			}
 		}
 
 		// Jump physics
@@ -430,7 +437,6 @@ function init(){
 function GenerateObstacle()
 {
 	var x = app.User.x + app.canvas.width;
-
 	app.Obstacles.push(new Obstacle(x, 1));
 }
 
@@ -503,14 +509,22 @@ function update(){
 		app.PauseButton.Update();
 		app.PauseButton.Draw();
 
-		
+		if (app.Controller.Lives < 0)
+		{
+			app.CurrentState = GameState.Lose;
+		}
 
 		Collision(app.mouse, app.PauseButton);
 	}
 	// Pause Update
 	else if (app.CurrentState === GameState.Pause)
 	{
-		console.log("Game is Paused");
+		console.log(app.ctx.outerWidth);
+	}
+	else if (app.CurrentState === GameState.Lose)
+	{
+		app.ctx.translate(OffsetX,0);
+		Reset();
 	}
 
 	// Reset Mouse
@@ -521,6 +535,18 @@ function update(){
 	window.requestAnimationFrame(update);
 }
 
+
+
+
+
+
+function Reset()
+{
+	// Clear Obstacle array
+	delete app.Obstacles;
+
+	app.CurrentState = GameState.MainMenu;
+}
 
 
 
@@ -624,6 +650,7 @@ function HandleCollision(Object_02)
 		else if (Object_02.name === "Pause")
 		{
 			app.ButtonClickSound.play();
+			app.ctx.translate(OffsetX, 0);
 			app.CurrentState = GameState.Pause;
 		}
 		else if (Object_02.name === "Exit")
@@ -642,6 +669,5 @@ function onTouchStart(e){
 	if (app.CurrentState === GameState.Play && !app.User.jump && !app.User.InAir)
 	{
 		app.User.jump = true;
-		console.log("Jump");
 	}
 }
