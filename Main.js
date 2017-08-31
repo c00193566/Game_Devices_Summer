@@ -283,11 +283,13 @@ class GameController {
 	Draw()
 	{
 		app.ctx.fillText(this.ScoreText, this.x, this.y);
-		app.ctx.fillText(this.LivesText, this.x + 200, this.y);
+		app.ctx.fillText(this.LivesText, this.x + 250, this.y);
 	}
 
 	Update(velocity)
 	{
+		console.log(this.Multiplier);
+
 		// Scroll HUD
 		this.x += velocity;
 
@@ -401,6 +403,28 @@ class PickUp {
 		this.img = new Image();
 		this.img.src = "assets/" + name + ".png";
 		this.count = 0;
+		this.audio = new Audio("assets/Coin.wav");
+
+		if (!Mute)
+		{
+			this.audio.volume = 1;
+		}
+		else
+		{
+			this.audio.volume = 0;
+		}
+	}
+
+	CheckMute()
+	{
+		if (!Mute)
+		{
+			this.audio.volume = 1;
+		}
+		else
+		{
+			this.audio.volume = 0;
+		}
 	}
 
 	SpriteCycle()
@@ -743,7 +767,6 @@ function update(){
 		// Generates Pick Ups
 		if (app.Controller.GeneratePickUp)
 		{
-			console.log("GeneratePickUp");
 			app.Controller.GeneratePickUp = false;
 			GeneratePickUp();
 		}
@@ -766,6 +789,7 @@ function update(){
 			{
 				for (var i = 0; i < app.PickUps.length; i++)
 				{
+					app.PickUps[i].CheckMute();
 					app.PickUps[i].SpriteCycle();
 					app.PickUps[i].Draw();
 					PlayerCollision(app.User, app.PickUps[i]);
@@ -952,6 +976,11 @@ function HandleCollision(Object_02)
 				app.User.velocity.x = 2;
 			}
 		}
+	}
+	else if (Object_02.name === "Coin")
+	{
+		app.Controller.Multiplier += 0.2;
+		Object_02.audio.play();
 	}
 	else if (Object_02.name === "Play")
 	{
