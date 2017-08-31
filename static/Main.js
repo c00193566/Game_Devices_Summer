@@ -37,7 +37,7 @@ class Button {
 	{
 		this.name = ImageLoad;
 		this.img = new Image();
-		var LoadPath = 'assets/' + ImageLoad + '.png';
+		var LoadPath = 'static/styles/' + ImageLoad + '.png';
 		this.width = 128;
 		this.height = 128;
 		this.x = x - (this.width / 2);
@@ -65,7 +65,7 @@ class Button {
 				}
 				else
 				{
-					this.img.src = "assets/AudioOff.png";
+					this.img.src = "static/styles/AudioOff.png";
 					app.ButtonClickSound.volume = 0;
 					app.BackgroundMusic.volume = 0;
 				}
@@ -87,11 +87,11 @@ class Button {
 	{
 		if (Mute)
 		{
-			this.img.src = "assets/AudioOff.png";
+			this.img.src = "static/styles/AudioOff.png";
 		}
 		else
 		{
-			this.img.src = "assets/AudioOn.png";
+			this.img.src = "static/styles/AudioOn.png";
 		}
 	}
 
@@ -123,14 +123,14 @@ class Player {
 		this.width = 128; // Width of image
 		this.height = 128; // Height of image
 		this.img = new Image();
-		this.img.src = "assets/female.png";
+		this.img.src = "static/styles/female.png";
 		this.count = 0; // Used for updating frames
 		this.jump = false;
 		this.acceleration = {x : 0.1, y : 9.81};
 		this.velocity = { x : 0, y : 0};
 		this.u = 60;
 		this.InAir = false;
-		this.audio = new Audio("assets/Jump.wav");
+		this.audio = new Audio("static/styles/Jump.wav");
 		if (!Mute)
 		{
 			this.audio.volume = 1;
@@ -371,7 +371,7 @@ class Obstacle {
 
 		if (Level < 3)
 		{
-			this.img.src = "assets/" + name + ".png";
+			this.img.src = "static/styles/" + name + ".png";
 		}
 	}
 
@@ -399,9 +399,9 @@ class PickUp {
 		this.width = 44; // Width of image
 		this.height = 40; // Height of image
 		this.img = new Image();
-		this.img.src = "assets/" + name + ".png";
+		this.img.src = "static/styles/" + name + ".png";
 		this.count = 0;
-		this.audio = new Audio("assets/Coin.wav");
+		this.audio = new Audio("static/styles/Coin.wav");
 		this.dead = false;
 
 		if (!Mute)
@@ -512,13 +512,13 @@ function init(){
 
 	// Background Music
 	var BackgroundMusic;
-	app.BackgroundMusic = new Audio("assets/Background Music.mp3");
+	app.BackgroundMusic = new Audio("static/styles/Background Music.mp3");
 	app.BackgroundMusic.loop = true;
 	//app.BackgroundMusic.play();
 
 	// Create button click sound
 	var ButtonClickSound;
-	app.ButtonClickSound = new Audio("assets/Button.wav");
+	app.ButtonClickSound = new Audio("static/styles/Button.wav");
 
 	var x = app.canvas.width / 2;
 	var y = app.canvas.height / 4;
@@ -532,7 +532,7 @@ function init(){
 		app.MainMenuImage.height = app.canvas.height;
 	}
 
-	app.MainMenuImage.src = "assets/MainMenu.png";
+	app.MainMenuImage.src = "static/styles/MainMenu.png";
 
 	var PauseMenuImage;
 	app.PauseMenuImage = new Image();
@@ -543,7 +543,7 @@ function init(){
 		app.PauseMenuImage.height = app.canvas.height;
 	}
 
-	app.PauseMenuImage.src = "assets/PauseImage.png";
+	app.PauseMenuImage.src = "static/styles/PauseImage.png";
 
 	// Initialise Buttons
 	var MenuButtons;
@@ -585,10 +585,10 @@ function init(){
 		app.WinImage.height = app.canvas.height;
 	}
 
-	app.BackgroundImage.src = "assets/BackgroundLevel1.png";
-	app.GroundImage.src = "assets/GroundLevel1.png";
-	app.LoseImage.src = "assets/Lose.png";
-	app.WinImage.src = "assets/Win.png";
+	app.BackgroundImage.src = "static/styles/BackgroundLevel1.png";
+	app.GroundImage.src = "static/styles/GroundLevel1.png";
+	app.LoseImage.src = "static/styles/Lose.png";
+	app.WinImage.src = "static/styles/Win.png";
 
 	// Create array to hold obstacles
 	var Obstacles;
@@ -677,8 +677,8 @@ function NextLevel()
 
 	if (app.Controller.Level === 2)
 	{
-		app.BackgroundImage.src = "assets/BackgroundLevel2.png";
-		app.GroundImage.src = "assets/GroundLevel2.png";
+		app.BackgroundImage.src = "static/styles/BackgroundLevel2.png";
+		app.GroundImage.src = "static/styles/GroundLevel2.png";
 	}
 
 	// Create array to hold obstacles
