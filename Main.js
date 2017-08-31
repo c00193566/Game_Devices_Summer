@@ -645,8 +645,6 @@ function NextLevel()
 	var User;
 	app.User = new Player();
 
-	app.ctx.translate(OffsetX, 0);
-
 	app.Controller.x = 0;
 	app.Controller.count = 0;
 	app.PauseButton.x = app.canvas.width - 128;
@@ -840,8 +838,12 @@ function update(){
 	}
 	else if (app.CurrentState === GameState.Win)
 	{
-		app.ctx.translate(OffsetX,0);
-		Reset();
+		clock += DeltaTime;
+
+		if (clock > 60)
+		{
+			Reset();
+		}
 	}
 	else if (app.CurrentState === GameState.NextLevel)
 	{
@@ -1057,6 +1059,8 @@ function HandleCollision(Object_02)
 	}
 	else if (Object_02.name === "Finish")
 	{
+		app.ctx.translate(OffsetX,0);
+		
 		if (app.Controller.Level === 1)
 		{
 			app.Controller.Level++;
