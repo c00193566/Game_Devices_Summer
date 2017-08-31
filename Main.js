@@ -21,7 +21,7 @@ var clock = 0;
 
 // Set offset from screen
 var OffsetX = 0;
-var Mute = true;
+var Mute = false;
 
 // Keep track of last gamestate
 var LastGamestate;
@@ -45,11 +45,6 @@ class Button {
 		this.accel = 0;
 		this.vel = 0;
 
-		if (this.name === "AudioOn")
-		{
-			this.audio = mute;
-		}
-
 		if (ImageLoad === 'Null')
 		{
 
@@ -62,17 +57,17 @@ class Button {
 			}
 			else
 			{
-				if (!this.audio)
-				{
-					this.img.src = "assets/AudioOff.png";
-					app.ButtonClickSound.volume = 0;
-					app.BackgroundMusic.volume = 0;
-				}
-				else
+				if (!Mute)
 				{
 					this.img.src = LoadPath;
 					app.ButtonClickSound.volume = 1;
 					app.BackgroundMusic.volume = 1;
+				}
+				else
+				{
+					this.img.src = "assets/AudioOff.png";
+					app.ButtonClickSound.volume = 0;
+					app.BackgroundMusic.volume = 0;
 				}
 			}
 		}
@@ -90,17 +85,13 @@ class Button {
 
 	ChangeImage()
 	{
-		if (this.audio === true)
+		if (Mute)
 		{
 			this.img.src = "assets/AudioOff.png";
-			Mute = true;
-			this.audio = false;
 		}
 		else
 		{
 			this.img.src = "assets/AudioOn.png";
-			Mute = false;
-			this.audio = true;
 		}
 	}
 
@@ -140,7 +131,7 @@ class Player {
 		this.u = 60;
 		this.InAir = false;
 		this.audio = new Audio("assets/Jump.wav");
-		if (Mute)
+		if (!Mute)
 		{
 			this.audio.volume = 1;
 		}
@@ -855,7 +846,6 @@ function Reset()
 	delete app.User;
 	delete app.GroundImage;
 	app.BackgroundMusic.pause();
-	Mute = app.OptionButtons[2].audio;
 	delete app.BackgroundMusic;
 	delete app.ButtonClickSound;
 	delete app.MenuButtons;
@@ -985,19 +975,30 @@ function HandleCollision(Object_02)
 	else if (Object_02.name === "AudioOn")
 	{
 		app.ButtonClickSound.play();
-		Object_02.ChangeImage();
 
-		// Mutes or unmutes audio
-		if (Object_02.audio === true)
+		if (Mute)
 		{
-			app.ButtonClickSound.volume = 1;
-			app.BackgroundMusic.volume = 1;
+			Mute = false;
 		}
 		else
+		{
+			Mute = true;
+		}
+
+
+		Object_02.ChangeImage();
+
+		if (Mute)
 		{
 			app.ButtonClickSound.volume = 0;
 			app.BackgroundMusic.volume = 0;
 		}
+		else
+		{
+			app.ButtonClickSound.volume = 1;
+			app.BackgroundMusic.volume = 1;
+		}
+
 	}
 	else if (Object_02.name === "Pause")
 	{
