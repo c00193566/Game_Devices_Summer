@@ -778,13 +778,11 @@ function update(){
 			for (var i = 0; i < app.Obstacles.length; i++)
 			{
 				app.Obstacles[i].Draw();
-
+				PlayerCollision(app.User, app.Obstacles[i]);
 				if(app.Obstacles[i].x < app.Controller.x)
 				{
 						app.Obstacles.splice(i, 1);
 				}
-
-				PlayerCollision(app.User, app.Obstacles[i]);
 			}
 		}
 
@@ -798,11 +796,11 @@ function update(){
 					app.PickUps[i].CheckMute();
 					app.PickUps[i].SpriteCycle();
 					app.PickUps[i].Draw();
+					PlayerCollision(app.User, app.PickUps[i]);
 					if(app.PickUps[i].dead)
 					{
 						app.PickUps.splice(i, 1);
 					}
-					PlayerCollision(app.User, app.PickUps[i]);
 				}
 			}
 		}
