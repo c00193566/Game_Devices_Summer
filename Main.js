@@ -648,6 +648,7 @@ function NextLevel()
 	app.ctx.translate(OffsetX, 0);
 
 	app.Controller.x = 0;
+	app.Controller.count = 0;
 	app.PauseButton.x = app.canvas.width - 128;
 
 	OffsetX = 0;
@@ -779,10 +780,6 @@ function update(){
 			{
 				app.Obstacles[i].Draw();
 				PlayerCollision(app.User, app.Obstacles[i]);
-				if(app.Obstacles[i].x < app.Controller.x)
-				{
-						app.Obstacles.splice(i, 1);
-				}
 			}
 		}
 
@@ -1060,8 +1057,16 @@ function HandleCollision(Object_02)
 	}
 	else if (Object_02.name === "Finish")
 	{
-		app.Controller.Level++;
-		app.CurrentState = GameState.NextLevel;
+		if (app.Controller.Level === 1)
+		{
+			app.Controller.Level++;
+			app.CurrentState = GameState.NextLevel;
+		}
+		else
+		{
+			clock = 0;
+			app.CurrentState = GameState.Win;
+		}
 	}
 }
 
