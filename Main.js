@@ -695,6 +695,11 @@ function update(){
 		app.ctx.translate(OffsetX,0);
 		Reset();
 	}
+	else if (app.CurrentState === GameState.Win)
+	{
+		app.ctx.translate(OffsetX,0);
+		Reset();
+	}
 	else if (app.CurrentState === GameState.NextLevel)
 	{
 		NextLevel();
