@@ -514,7 +514,7 @@ function init(){
 	var BackgroundMusic;
 	app.BackgroundMusic = new Audio("static/styles/Background Music.mp3");
 	app.BackgroundMusic.loop = true;
-	//app.BackgroundMusic.play();
+	app.BackgroundMusic.play();
 
 	// Create button click sound
 	var ButtonClickSound;
