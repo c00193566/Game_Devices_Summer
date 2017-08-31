@@ -288,8 +288,6 @@ class GameController {
 
 	Update(velocity)
 	{
-		console.log(this.Multiplier);
-
 		// Scroll HUD
 		this.x += velocity;
 
@@ -849,6 +847,10 @@ function update(){
 		app.ctx.font = '64px serif';
 
 		app.ctx.drawImage(app.WinImage, 0, 0, app.WinImage.width, app.WinImage.height);
+
+		var x = (app.canvas.width / 2) - (app.ctx.measureText(app.Controller.ScoreText).width / 2);
+
+		app.ctx.fillText(app.Controller.ScoreText, x, (app.canvas.height / 2));
 
 		if (clock > 60)
 		{
