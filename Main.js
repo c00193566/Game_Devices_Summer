@@ -567,6 +567,8 @@ function init(){
 	app.GroundImage = new Image();
 	var LoseImage;
 	app.LoseImage = new Image();
+	var WinImage;
+	app.WinImage = new Image();
 
 	app.BackgroundImage.onload = function()
 	{
@@ -579,13 +581,16 @@ function init(){
 		app.GroundImage.height = heightDiff;
 
 		app.LoseImage.width = app.canvas.width;
-		heightDiff = screen.height + app.LoseImage.height;
 		app.LoseImage.height = app.canvas.height;
+
+		app.WinImage.width = app.canvas.width;
+		app.WinImage.height = app.canvas.height;
 	}
 
 	app.BackgroundImage.src = "assets/BackgroundLevel1.png";
 	app.GroundImage.src = "assets/GroundLevel1.png";
 	app.LoseImage.src = "assets/Lose.png";
+	app.WinImage.src = "assets/Win.png";
 
 	// Create array to hold obstacles
 	var Obstacles;
@@ -840,6 +845,11 @@ function update(){
 	{
 		clock += DeltaTime;
 
+		app.ctx.fillStyle = '#826C00';
+		app.ctx.font = '64px serif';
+
+		app.ctx.drawImage(app.WinImage, 0, 0, app.WinImage.width, app.WinImage.height);
+
 		if (clock > 60)
 		{
 			Reset();
@@ -883,6 +893,8 @@ function Reset()
 	delete app.PauseButton;
 	delete app.OptionButtons;
 	delete app.MainMenuImage;
+	delete app.LoseImage;
+	delete app.WinImage;
 
 	OffsetX = 0;
 
@@ -1060,7 +1072,7 @@ function HandleCollision(Object_02)
 	else if (Object_02.name === "Finish")
 	{
 		app.ctx.translate(OffsetX,0);
-		
+
 		if (app.Controller.Level === 1)
 		{
 			app.Controller.Level++;
