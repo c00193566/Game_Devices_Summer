@@ -93,11 +93,13 @@ class Button {
 		if (this.audio === true)
 		{
 			this.img.src = "assets/AudioOff.png";
+			Mute = true;
 			this.audio = false;
 		}
 		else
 		{
 			this.img.src = "assets/AudioOn.png";
+			Mute = false;
 			this.audio = true;
 		}
 	}
@@ -137,6 +139,15 @@ class Player {
 		this.velocity = { x : 0, y : 0};
 		this.u = 60;
 		this.InAir = false;
+		this.audio = new Audio("assets/Jump.wav");
+		if (Mute)
+		{
+			this.audio.volume = 1;
+		}
+		else
+		{
+			this.audio.volume = 0;
+		}
 	}
 
 	SpriteCycle()
@@ -158,6 +169,16 @@ class Player {
 
 	Update()
 	{
+		if (!Mute)
+		{
+			this.audio.volume = 1;
+		}
+		else
+		{
+			this.audio.volume = 0;
+		}
+
+
 		// Calculate velocity over the horizontal axis
 		this.velocity.x = this.velocity.x + (this.acceleration.x * DeltaTime);
 
@@ -379,7 +400,7 @@ class PickUp {
 	constructor(x, name)
 	{
 		this.name = name;
-		this.x = x + 100;
+		this.x = x + 200;
 		this.ground = app.canvas.height - 500;
 		this.y = this.ground - 150;
 		this.srcX = 0; // Refers to the x position on the sprite sheet
@@ -1012,5 +1033,6 @@ function onTouchStart(e){
 	if (app.CurrentState === GameState.Play && !app.User.jump && !app.User.InAir)
 	{
 		app.User.jump = true;
+		app.User.audio.play();
 	}
 }
