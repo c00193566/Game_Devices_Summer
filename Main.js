@@ -404,6 +404,7 @@ class PickUp {
 		this.img.src = "assets/" + name + ".png";
 		this.count = 0;
 		this.audio = new Audio("assets/Coin.wav");
+		this.dead = false;
 
 		if (!Mute)
 		{
@@ -778,6 +779,11 @@ function update(){
 			{
 				app.Obstacles[i].Draw();
 
+				if(app.Obstacles[i].x < app.Controller.x)
+				{
+						app.Obstacles.splice(i, 1);
+				}
+
 				PlayerCollision(app.User, app.Obstacles[i]);
 			}
 		}
@@ -792,6 +798,10 @@ function update(){
 					app.PickUps[i].CheckMute();
 					app.PickUps[i].SpriteCycle();
 					app.PickUps[i].Draw();
+					if(app.PickUps[i].dead)
+					{
+						app.PickUps.splice(i, 1);
+					}
 					PlayerCollision(app.User, app.PickUps[i]);
 				}
 			}
@@ -901,10 +911,12 @@ function PlayerCollision(Object_01, Object_02)
 	}
 	else
 	{
-		if (Object_01.x > Object_02.x && Object_01.x < (Object_02.x + Object_02.width) &&
-			(Object_01.y + Object_01.height) > Object_02.y)
+		if ((Object_01.x > Object_02.x && Object_01.x < (Object_02.x + Object_02.width)) || (Object_01.x + Object_01.width) > Object_02.x && (Object_01.x + Object_01.width) < (Object_02.x + Object_02.width))
 		{
-			collide = true	
+			if ((Object_01.y >= Object_02.y && Object_01.y <= (Object_02.y + Object_02.height)) || (Object_01.y + Object_01.height) >= Object_02.y && (Object_01.y + Object_01.height) <= (Object_02.y + Object_02.height))
+			{
+				collide = true;
+			}	
 		}
 	}
 
@@ -981,6 +993,7 @@ function HandleCollision(Object_02)
 	{
 		app.Controller.Multiplier += 0.2;
 		Object_02.audio.play();
+		Object_02.dead = true;
 	}
 	else if (Object_02.name === "Play")
 	{
