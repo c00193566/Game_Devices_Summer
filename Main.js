@@ -7,9 +7,10 @@ var GameState = {
 	//In Game
 	Play : 3,
 	Pause : 4,
-	//End
-	Win : 5,
-	Lose : 6
+	NextLevel : 5,
+	//End,
+	Win : 6,
+	Lose : 7
 }
 
 // For Delta time tracking
@@ -166,6 +167,13 @@ class Player {
 				this.velocity.x = 12;
 			}
 		}
+		else
+		{
+			if (this.velocity.x >= 14)
+			{
+				this.velocity.x = 14;
+			}
+		}
 
 
 		this.x += this.velocity.x;
@@ -253,6 +261,8 @@ class GameController {
 		this.y = 30;
 		this.Multiplier = 1;
 		this.GenerateObstacle = false;
+		this.GenerateFinish = false;
+		this.count = 0;
 		this.clock = 0;
 	}
 
@@ -266,6 +276,15 @@ class GameController {
 	{
 		// Scroll HUD
 		this.x += velocity;
+
+		if (this.Level === 1)
+		{
+			this.EndPosition = 50000;
+		}
+		else if (this.Level === 2)
+		{
+			this.EndPosition = 60000;
+		}
 
 		// Calcu;ate Score
 		this.Score += this.Multiplier * (velocity / 120);
@@ -288,6 +307,21 @@ class GameController {
 			}
 		}
 
+		if (this.x > this.EndPosition)
+		{
+			this.clock += DeltaTime * velocity;
+
+			if (this.clock > 200)
+			{
+				if (this.count < 1)
+				{
+					this.GenerateFinish = true;
+					this.clock = 0;
+					this.count++;
+				}
+			}
+		}
+
 		console.log(this.x);
 
 	}
@@ -300,9 +334,9 @@ class GameController {
 
 // Obstacle class
 class Obstacle {
-	constructor(x, Level)
+	constructor(x, Level, name)
 	{
-		this.name = "Obstacle";
+		this.name = name;
 		this.ground = app.canvas.height - 500;
 		this.x = x;
 		this.y = this.ground + 64;
@@ -313,7 +347,7 @@ class Obstacle {
 
 		if (Level < 3)
 		{
-			this.img.src = "assets/Bush.png";
+			this.img.src = "assets/" + name + ".png";
 		}
 	}
 
@@ -336,18 +370,8 @@ class PickUp {
 	}
 }
 
-class FinsihLine
-{
-	constructor(x)
-	{
-		this.name = "FinsihLine";
-		this.ground = app.canvas.height - 500;
-		this.x = x;
-		this.y = this.ground + 64;
-		this.width = 64;
-		this.height = 64;
-	}
-}
+
+
 
 
 
@@ -471,8 +495,8 @@ function init(){
 		app.GroundImage.height = heightDiff;
 	}
 
-	app.BackgroundImage.src = "assets/Background.png";
-	app.GroundImage.src = "assets/Ground.png";
+	app.BackgroundImage.src = "assets/BackgroundLevel1.png";
+	app.GroundImage.src = "assets/GroundLevel1.png";
 
 	// Create array to hold obstacles
 	var Obstacles;
@@ -489,8 +513,77 @@ function init(){
 function GenerateObstacle()
 {
 	var x = app.User.x + app.canvas.width;
-	app.Obstacles.push(new Obstacle(x, 1));
+	if (app.Controller.Level === 1)
+	{
+		app.Obstacles.push(new Obstacle(x, 1, "Bush"));
+	}
+	else
+	{
+		app.Obstacles.push(new Obstacle(x, 1, "Concrete"));
+	}
 }
+
+// Generates the finish line
+function GenerateFinish()
+{
+	var x = app.User.x + app.canvas.width;
+	app.Obstacles.push(new Obstacle(x, 1, "Finish"));
+}
+
+
+
+
+// Sets to next level
+function NextLevel()
+{
+	delete app.User;
+	delete app.BackgroundImage;
+	delete app.GroundImage;
+	delete app.Obstacles;
+
+	// Create user
+	var User;
+	app.User = new Player();
+
+	app.ctx.translate(OffsetX, 0);
+
+	app.Controller.x = 0;
+	app.PauseButton.x = app.canvas.width - 128;
+
+	OffsetX = 0;
+
+	app.Controller.GenerateFinish = false;
+
+
+	// Load in Background
+	var BackgroundImage;
+	app.BackgroundImage = new Image();
+	var GroundImage;
+	app.GroundImage = new Image();
+
+	app.BackgroundImage.onload = function()
+	{
+		var heightDiff = screen.height + app.BackgroundImage.height;
+		app.BackgroundImage.height = heightDiff;
+		app.BackgroundImage.width = (app.BackgroundImage.width * screen.width);
+		app.GroundImage.width = (app.GroundImage.width * screen.width);
+		heightDiff = screen.height + app.GroundImage.height;
+		app.GroundImage.height = heightDiff;
+	}
+
+	if (app.Controller.Level === 2)
+	{
+		app.BackgroundImage.src = "assets/BackgroundLevel2.png";
+		app.GroundImage.src = "assets/GroundLevel2.png";
+	}
+
+	// Create array to hold obstacles
+	var Obstacles;
+	app.Obstacles = [];
+
+	app.CurrentState = GameState.Play;
+}
+
 
 
 
@@ -558,6 +651,12 @@ function update(){
 			GenerateObstacle();
 		}
 
+		if (app.Controller.GenerateFinish)
+		{
+			app.Controller.GenerateFinish = false;
+			GenerateFinish();
+		}
+
 		if (app.Obstacles.length > 0)
 		{
 			for (var i = 0; i < app.Obstacles.length; i++)
@@ -595,6 +694,10 @@ function update(){
 	{
 		app.ctx.translate(OffsetX,0);
 		Reset();
+	}
+	else if (app.CurrentState === GameState.NextLevel)
+	{
+		NextLevel();
 	}
 
 	// Reset Mouse
@@ -642,10 +745,20 @@ function PlayerCollision(Object_01, Object_02)
 {
 	var collide = false;
 
-	if (Object_01.x > Object_02.x && Object_01.x < (Object_02.x + Object_02.width) &&
-		(Object_01.y + Object_01.height) > Object_02.y)
+	if (Object_02.name === "Finish")
 	{
-		collide = true	
+		if (Object_01.x > Object_02.x)
+		{
+			collide = true;
+		}
+	}
+	else
+	{
+		if (Object_01.x > Object_02.x && Object_01.x < (Object_02.x + Object_02.width) &&
+			(Object_01.y + Object_01.height) > Object_02.y)
+		{
+			collide = true	
+		}
 	}
 
 	if (collide)
@@ -692,85 +805,90 @@ function Collision(Object_01, Object_02)
 function HandleCollision(Object_02)
 {
 	if (Object_02.name === "Options")
+	{
+		LastGamestate = app.CurrentState;
+		app.CurrentState = GameState.Options;
+		app.ButtonClickSound.play();
+	}
+	else if (Object_02.name === "Bush" || Object_02.name === "Concrete")
+	{
+		if (!app.User.invincible)
 		{
-			LastGamestate = app.CurrentState;
-			app.CurrentState = GameState.Options;
-			app.ButtonClickSound.play();
-		}
-		else if (Object_02.name === "Obstacle")
-		{
-			if (!app.User.invincible)
-			{
-				app.User.invincible = true;
-				app.Controller.Lives -= 1;
-				app.Controller.Score -= 50;
-				app.User.velocity.x -= 5;
+			app.User.invincible = true;
+			app.Controller.Lives -= 1;
+			app.Controller.Score -= 50;
+			app.User.velocity.x -= 5;
 
-				if (app.Controller.Score <= 0)
-				{
-					app.Controller.Score = 0;
-				}
+			if (app.Controller.Score <= 0)
+			{
+				app.Controller.Score = 0;
+			}
 
-				if (app.User.velocity.x <= 2)
-				{
-					app.User.velocity.x = 2;
-				}
-			}
-		}
-		else if (Object_02.name === "Play")
-		{
-			if (app.CurrentState === GameState.MainMenu)
+			if (app.User.velocity.x <= 2)
 			{
-				app.CurrentState = GameState.Play;
-				app.ButtonClickSound.play();
-			}
-			else if (app.CurrentState === GameState.Pause)
-			{
-				app.ctx.translate(-OffsetX, 0);
-				app.CurrentState = GameState.Play;
-				app.ButtonClickSound.play();
+				app.User.velocity.x = 2;
 			}
 		}
-		else if (Object_02.name === "Back")
+	}
+	else if (Object_02.name === "Play")
+	{
+		if (app.CurrentState === GameState.MainMenu)
 		{
+			app.CurrentState = GameState.Play;
 			app.ButtonClickSound.play();
-			app.CurrentState = LastGamestate;
 		}
-		else if (Object_02.name === "AudioOn")
+		else if (app.CurrentState === GameState.Pause)
 		{
+			app.ctx.translate(-OffsetX, 0);
+			app.CurrentState = GameState.Play;
 			app.ButtonClickSound.play();
-			Object_02.ChangeImage();
+		}
+	}
+	else if (Object_02.name === "Back")
+	{
+		app.ButtonClickSound.play();
+		app.CurrentState = LastGamestate;
+	}
+	else if (Object_02.name === "AudioOn")
+	{
+		app.ButtonClickSound.play();
+		Object_02.ChangeImage();
 
-			// Mutes or unmutes audio
-			if (Object_02.audio === true)
-			{
-				app.ButtonClickSound.volume = 1;
-				app.BackgroundMusic.volume = 1;
-			}
-			else
-			{
-				app.ButtonClickSound.volume = 0;
-				app.BackgroundMusic.volume = 0;
-			}
-		}
-		else if (Object_02.name === "Pause")
+		// Mutes or unmutes audio
+		if (Object_02.audio === true)
 		{
-			app.ButtonClickSound.play();
-			app.ctx.translate(OffsetX, 0);
-			app.CurrentState = GameState.Pause;
+			app.ButtonClickSound.volume = 1;
+			app.BackgroundMusic.volume = 1;
 		}
-		else if (Object_02.name === "Exit")
+		else
 		{
-			app.ButtonClickSound.play();
-			if (app.CurrentState === GameState.MainMenu)
-			{
-				window.location.href = "http://keoghsph.pythonanywhere.com/projects";
-			}
-			else if (app.CurrentState === GameState.Pause)
-			{
-				Reset();
-			}
+			app.ButtonClickSound.volume = 0;
+			app.BackgroundMusic.volume = 0;
 		}
+	}
+	else if (Object_02.name === "Pause")
+	{
+		app.ButtonClickSound.play();
+		app.ctx.translate(OffsetX, 0);
+		app.CurrentState = GameState.Pause;
+	}
+	else if (Object_02.name === "Exit")
+	{
+		app.ButtonClickSound.play();
+		if (app.CurrentState === GameState.MainMenu)
+		{
+			window.location.href = "http://keoghsph.pythonanywhere.com/projects";
+		}
+		else if (app.CurrentState === GameState.Pause)
+		{
+			Reset();
+		}
+	}
+	else if (Object_02.name === "Finish")
+	{
+		app.Controller.Level++;
+		app.CurrentState = GameState.NextLevel;
+	}
 }
 
 // Function to handle touch input
