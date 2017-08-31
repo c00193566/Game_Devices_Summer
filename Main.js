@@ -17,6 +17,7 @@ var GameState = {
 var LastUpdate = Date.now();
 var Now;
 var DeltaTime;
+var clock = 0;
 
 // Set offset from screen
 var OffsetX = 0;
@@ -321,9 +322,6 @@ class GameController {
 				}
 			}
 		}
-
-		console.log(this.x);
-
 	}
 }
 
@@ -484,19 +482,27 @@ function init(){
 	app.BackgroundImage = new Image();
 	var GroundImage;
 	app.GroundImage = new Image();
+	var LoseImage;
+	app.LoseImage = new Image();
 
 	app.BackgroundImage.onload = function()
 	{
 		var heightDiff = screen.height + app.BackgroundImage.height;
 		app.BackgroundImage.height = heightDiff;
 		app.BackgroundImage.width = (app.BackgroundImage.width * screen.width);
+
 		app.GroundImage.width = (app.GroundImage.width * screen.width);
 		heightDiff = screen.height + app.GroundImage.height;
 		app.GroundImage.height = heightDiff;
+
+		app.LoseImage.width = app.canvas.width;
+		heightDiff = screen.height + app.LoseImage.height;
+		app.LoseImage.height = app.canvas.height;
 	}
 
 	app.BackgroundImage.src = "assets/BackgroundLevel1.png";
 	app.GroundImage.src = "assets/GroundLevel1.png";
+	app.LoseImage.src = "assets/Lose.png";
 
 	// Create array to hold obstacles
 	var Obstacles;
@@ -673,6 +679,8 @@ function update(){
 
 		if (app.Controller.Lives < 0)
 		{
+			app.ctx.translate(OffsetX,0);
+			clock = 0;
 			app.CurrentState = GameState.Lose;
 		}
 
@@ -692,8 +700,16 @@ function update(){
 	}
 	else if (app.CurrentState === GameState.Lose)
 	{
-		app.ctx.translate(OffsetX,0);
-		Reset();
+		clock += DeltaTime;
+
+		console.log(clock);
+
+		app.ctx.drawImage(app.LoseImage, 0, 0, app.LoseImage.width, app.LoseImage.height);
+
+		if (clock > 60)
+		{
+			Reset();
+		}
 	}
 	else if (app.CurrentState === GameState.Win)
 	{
