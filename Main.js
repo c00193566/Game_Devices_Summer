@@ -379,8 +379,9 @@ class PickUp {
 	constructor(x, name)
 	{
 		this.name = name;
-		this.x = x;
-		this.y = this.ground - 200;
+		this.x = x + 100;
+		this.ground = app.canvas.height - 500;
+		this.y = this.ground - 150;
 		this.srcX = 0; // Refers to the x position on the sprite sheet
 		this.srcY = 0; // Refers to the y position on the sprite sheet
 		this.width = 44; // Width of image
@@ -615,6 +616,8 @@ function NextLevel()
 	OffsetX = 0;
 
 	app.Controller.GenerateFinish = false;
+
+	app.Controller.clock = 0;
 
 
 	// Load in Background
