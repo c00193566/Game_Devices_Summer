@@ -362,9 +362,17 @@ class Obstacle {
 
 // Pick up class
 class PickUp {
-	constructor(x)
+	constructor(x, name)
 	{
-		
+		this.name = name;
+		this.x = x;
+		this.y = this.ground - 40;
+		this.srcX = 0; // Refers to the x position on the sprite sheet
+		this.srcY = 0; // Refers to the y position on the sprite sheet
+		this.width = 44; // Width of image
+		this.height = 40; // Height of image
+		this.img = new Image();
+		this.img.src = "assets/" + name + ".png";
 	}
 }
 
