@@ -263,6 +263,7 @@ class GameController {
 		this.Multiplier = 1;
 		this.GenerateObstacle = false;
 		this.GenerateFinish = false;
+		this.GeneratePickUp = false;
 		this.count = 0;
 		this.clock = 0;
 	}
@@ -280,7 +281,7 @@ class GameController {
 
 		if (this.Level === 1)
 		{
-			this.EndPosition = 50000;
+			this.EndPosition = 5000;
 		}
 		else if (this.Level === 2)
 		{
@@ -304,7 +305,20 @@ class GameController {
 			if (this.clock > 200)
 			{
 				this.GenerateObstacle = true;
-				this.clock = 0;
+
+				if (this.Level < 2)
+				{
+					this.clock = 0;
+				}
+			}
+
+			if (this.Level > 1)
+			{
+				if (this.clock > 200)
+				{
+					this.GeneratePickUp = true;
+					this.clock = 0;
+				}
 			}
 		}
 
@@ -366,13 +380,36 @@ class PickUp {
 	{
 		this.name = name;
 		this.x = x;
-		this.y = this.ground - 40;
+		this.y = this.ground - 200;
 		this.srcX = 0; // Refers to the x position on the sprite sheet
 		this.srcY = 0; // Refers to the y position on the sprite sheet
 		this.width = 44; // Width of image
 		this.height = 40; // Height of image
 		this.img = new Image();
 		this.img.src = "assets/" + name + ".png";
+		this.count = 0;
+	}
+
+	SpriteCycle()
+	{
+		this.count += 1;
+
+		if (this.count > 3)
+		{
+			this.count = 0;
+
+			this.srcX += this.width;
+
+			if (this.srcX > this.width * 9)
+			{
+				this.srcX = 0;
+			}
+		}	
+	}
+
+	Draw()
+	{
+		app.ctx.drawImage(this.img, this.srcX, this.srcY, this.width, this.height, this.x, this.y, this.width, this.height);
 	}
 }
 
@@ -515,6 +552,9 @@ function init(){
 	// Create array to hold obstacles
 	var Obstacles;
 	app.Obstacles = [];
+
+	var PickUps;
+	app.PickUps = [];
 }
 
 
@@ -536,6 +576,14 @@ function GenerateObstacle()
 		app.Obstacles.push(new Obstacle(x, 1, "Concrete"));
 	}
 }
+
+// Creates a new Pick up
+function GeneratePickUp()
+{
+	var x = app.User.x + app.canvas.width;
+	app.PickUps.push(new PickUp(x, "Coin"));
+}
+
 
 // Generates the finish line
 function GenerateFinish()
@@ -594,6 +642,9 @@ function NextLevel()
 	// Create array to hold obstacles
 	var Obstacles;
 	app.Obstacles = [];
+
+	var PickUps;
+	app.PickUps = [];
 
 	app.CurrentState = GameState.Play;
 }
@@ -659,18 +710,30 @@ function update(){
 		app.Controller.Update(app.User.velocity.x);
 		app.Controller.Draw();
 
+
+		// Generates Obstacles
 		if (app.Controller.GenerateObstacle)
 		{
 			app.Controller.GenerateObstacle = false;
 			GenerateObstacle();
 		}
 
+		// Generates Finish Line
 		if (app.Controller.GenerateFinish)
 		{
 			app.Controller.GenerateFinish = false;
 			GenerateFinish();
 		}
 
+		// Generates Pick Ups
+		if (app.Controller.GeneratePickUp)
+		{
+			console.log("GeneratePickUp");
+			app.Controller.GeneratePickUp = false;
+			GeneratePickUp();
+		}
+
+		// Updates Obstacles
 		if (app.Obstacles.length > 0)
 		{
 			for (var i = 0; i < app.Obstacles.length; i++)
@@ -678,6 +741,20 @@ function update(){
 				app.Obstacles[i].Draw();
 
 				PlayerCollision(app.User, app.Obstacles[i]);
+			}
+		}
+
+		// Update Pick ups
+		if (app.Controller.Level > 1)
+		{
+			if (app.PickUps.length > 0)
+			{
+				for (var i = 0; i < app.PickUps.length; i++)
+				{
+					app.PickUps[i].SpriteCycle();
+					app.PickUps[i].Draw();
+					PlayerCollision(app.User, app.PickUps[i]);
+				}
 			}
 		}
 
@@ -709,8 +786,6 @@ function update(){
 	else if (app.CurrentState === GameState.Lose)
 	{
 		clock += DeltaTime;
-
-		console.log(clock);
 
 		app.ctx.drawImage(app.LoseImage, 0, 0, app.LoseImage.width, app.LoseImage.height);
 
@@ -747,6 +822,11 @@ function Reset()
 	// Clear Obstacle array
 	delete app.Obstacles;
 	delete app.BackgroundImage;
+	if (app.Controller.Level === 2)
+	{
+		delete app.PickUps;
+	}
+
 	delete app.Controller;
 	delete app.User;
 	delete app.GroundImage;
