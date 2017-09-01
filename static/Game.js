@@ -365,11 +365,11 @@ class GameController {
 
 		if (this.Level === 1)
 		{
-			this.EndPosition = 5000;
+			this.EndPosition = 40000;
 		}
 		else if (this.Level === 2)
 		{
-			this.EndPosition = 60000;
+			this.EndPosition = 50000;
 		}
 
 		// Calcu;ate Score
