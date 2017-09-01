@@ -1160,33 +1160,39 @@ function HandleCollision(Object_02)
 	}
 	else if (Object_02.name === "Male")
 	{
-		if (Character === "Male")
+		if (LastGamestate != GameState.Pause)
 		{
-			Character = "Female";
-		}
-		else if (Character === "Female")
-		{
-			Character = "Male";
-		}
+			if (Character === "Male")
+			{
+				Character = "Female";
+			}
+			else if (Character === "Female")
+			{
+				Character = "Male";
+			}
 
-		app.User.ChangeCharacter();
-		Object_02.ChangeCharacter();
-		app.OptionButtons[1].ChangeCharacter();
+			app.User.ChangeCharacter();
+			Object_02.ChangeCharacter();
+			app.OptionButtons[1].ChangeCharacter();
+		}
 	}
 	else if (Object_02.name === "Female")
 	{
-		if (Character === "Male")
+		if (LastGamestate != GameState.Pause)
 		{
-			Character = "Female";
-		}
-		else if (Character === "Female")
-		{
-			Character = "Male";
-		}
+			if (Character === "Male")
+			{
+				Character = "Female";
+			}
+			else if (Character === "Female")
+			{
+				Character = "Male";
+			}
 
-		app.User.ChangeCharacter();
-		Object_02.ChangeCharacter();
-		app.OptionButtons[0].ChangeCharacter();
+			app.User.ChangeCharacter();
+			Object_02.ChangeCharacter();
+			app.OptionButtons[0].ChangeCharacter();
+		}
 	}
 }
 
