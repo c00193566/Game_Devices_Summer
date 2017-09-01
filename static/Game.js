@@ -21,10 +21,15 @@ var clock = 0;
 
 // Set offset from screen
 var OffsetX = 0;
+
+// Used for Mute
 var Mute = false;
 
 // Keep track of last gamestate
 var LastGamestate;
+
+// Keep track of character chosen
+var Character = "Male";
 
 
 
@@ -51,9 +56,31 @@ class Button {
 		}
 		else
 		{
-			if (this.name != "AudioOn")
+			if (this.name != "AudioOn" && this.name != "Male" && this.name != "Female")
 			{
 				this.img.src = LoadPath;
+			}
+			else if (this.name === "Male")
+			{
+				if (Character === "Male")
+				{
+					this.img.src = "static/styles/MaleSelection.png";
+				}
+				else if (Character === "Female")
+				{
+					this.img.src = "static/styles/MaleNotSelected.png";
+				}
+			}
+			else if (this.name === "Female")
+			{
+				if (Character === "Male")
+				{
+					this.img.src = "static/styles/FemaleNotSelected.png";
+				}
+				else if (Character === "Female")
+				{
+					this.img.src = "static/styles/FemaleSelection.png";
+				}
 			}
 			else
 			{
@@ -95,6 +122,32 @@ class Button {
 		}
 	}
 
+	ChangeCharacter()
+	{
+		if (this.name === "Male")
+		{
+			if (Character === "Male")
+			{
+				this.img.src = "static/styles/MaleSelection.png";
+			}
+			else if (Character === "Female")
+			{
+				this.img.src = "static/styles/MaleNotSelected.png";
+			}
+		}
+		else if (this.name === "Female")
+		{
+			if (Character === "Male")
+			{
+				this.img.src = "static/styles/FemaleNotSelected.png";
+			}
+			else if (Character === "Female")
+			{
+				this.img.src = "static/styles/FemaleSelection.png";
+			}
+		}
+	}
+
 	Update(velocity)
 	{
 		this.x += velocity;
@@ -123,7 +176,6 @@ class Player {
 		this.width = 128; // Width of image
 		this.height = 128; // Height of image
 		this.img = new Image();
-		this.img.src = "static/styles/female.png";
 		this.count = 0; // Used for updating frames
 		this.jump = false;
 		this.acceleration = {x : 0.1, y : 9.81};
@@ -131,6 +183,14 @@ class Player {
 		this.u = 60;
 		this.InAir = false;
 		this.audio = new Audio("static/styles/Jump.wav");
+		if (Character === "Male")
+		{
+			this.img.src = "static/styles/male.png";
+		}
+		else if (Character === "Female")
+		{
+			this.img.src = "static/styles/female.png";
+		}
 		if (!Mute)
 		{
 			this.audio.volume = 1;
@@ -138,6 +198,18 @@ class Player {
 		else
 		{
 			this.audio.volume = 0;
+		}
+	}
+
+	ChangeCharacter()
+	{
+		if (Character === "Male")
+		{
+			this.img.src = "static/styles/male.png";
+		}
+		else if (Character === "Female")
+		{
+			this.img.src = "static/styles/female.png";
 		}
 	}
 
@@ -556,7 +628,7 @@ function init(){
 	app.PauseMenu = [new Button(x, y, "Play"), new Button(x, y*2, "Options"), new Button(x, y*3, "Exit")]
 
 	var OptionButtons;
-	app.OptionButtons = [new Button(x - 128, y, "Play"), new Button(x + 128, y, "Play"), new Button(x, y*2, "AudioOn", Mute), new Button(x, y*3,"Back")];
+	app.OptionButtons = [new Button(x - 128, y, "Male"), new Button(x + 128, y, "Female"), new Button(x, y*2, "AudioOn", Mute), new Button(x, y*3,"Back")];
 
 	// Create background image
 	var BackgroundImage;
@@ -1085,6 +1157,36 @@ function HandleCollision(Object_02)
 			clock = 0;
 			app.CurrentState = GameState.Win;
 		}
+	}
+	else if (Object_02.name === "Male")
+	{
+		if (Character === "Male")
+		{
+			Character = "Female";
+		}
+		else if (Character === "Female")
+		{
+			Character = "Male";
+		}
+
+		app.User.ChangeCharacter();
+		Object_02.ChangeCharacter();
+		app.OptionButtons[1].ChangeCharacter();
+	}
+	else if (Object_02.name === "Female")
+	{
+		if (Character === "Male")
+		{
+			Character = "Female";
+		}
+		else if (Character === "Female")
+		{
+			Character = "Male";
+		}
+
+		app.User.ChangeCharacter();
+		Object_02.ChangeCharacter();
+		app.OptionButtons[0].ChangeCharacter();
 	}
 }
 
